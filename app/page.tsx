@@ -1,18 +1,26 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Bluetooth, BatteryFull, BatteryMedium, BatteryLow, 
-  Clock, Moon, Sun, Plane, Plus, Settings2, Power, 
+  Clock, Moon, Sun, Plane, Plus, Settings2,
   Wind, Sparkles, Activity
 } from 'lucide-react';
 
 const MODES = [
-  { id: 'mindfulness', name: '正念模式', desc: '柔和的光波助你进入冥想状态', icon: Sparkles, colors: ['bg-orange-500', 'bg-amber-500', 'bg-rose-500'] },
-  { id: 'resonance', name: '共振呼吸', desc: '引导 5.5 秒的吸气与呼气节奏', icon: Activity, colors: ['bg-cyan-500', 'bg-blue-500', 'bg-teal-500'] },
-  { id: '478', name: '4-7-8 呼吸', desc: '深度放松，快速平复心率准备入眠', icon: Wind, colors: ['bg-indigo-500', 'bg-purple-500', 'bg-violet-500'] },
-  { id: 'off', name: '关闭光效', desc: '纯粹的遮光睡眠体验', icon: Power, colors: ['bg-neutral-800', 'bg-zinc-800', 'bg-slate-800'] }
+  { 
+    id: 'mindfulness', name: '正念模式', desc: '柔和的光波助你进入冥想状态', icon: Sparkles, 
+    colors: ['#ff6b35', '#f7c948', '#ff8c69', '#ffd700', '#ff6347', '#ffa07a', '#ffb347'] 
+  },
+  { 
+    id: 'resonance', name: '共振呼吸', desc: '引导 5.5 秒的吸气与呼气节奏', icon: Activity, 
+    colors: ['#00b4d8', '#0077b6', '#48cae4', '#0096c7', '#00a8cc', '#0284c7', '#0ea5e9'] 
+  },
+  { 
+    id: '478', name: '4-7-8 呼吸', desc: '深度放松，快速平复心率准备入眠', icon: Wind, 
+    colors: ['#6366f1', '#8b5cf6', '#a855f7', '#7c3aed', '#6d28d9', '#c084fc', '#a78bfa'] 
+  },
 ];
 
 const TABS = [
@@ -26,33 +34,38 @@ export default function AuraMaskApp() {
   const [connected, setConnected] = useState(true);
   const [battery] = useState(85);
   const [activeTab, setActiveTab] = useState('control');
-  const [activeMode, setActiveMode] = useState('mindfulness');
+  const [activeMode, setActiveMode] = useState<string | null>('mindfulness');
   const [timer, setTimer] = useState(30);
 
   return (
-    <main className="relative min-h-screen w-full flex justify-center bg-black overflow-hidden font-sans text-white selection:bg-white/20">
+    <main className="relative min-h-[100dvh] w-full font-sans text-white selection:bg-white/10">
       <Background modeId={activeMode} />
       
-      <div className="relative w-full max-w-[430px] h-[100dvh] flex flex-col mx-auto sm:border-x sm:border-white/5 bg-black/20 backdrop-blur-[10px] sm:backdrop-blur-[20px]">
+      <div className="relative w-full min-h-[100dvh] flex flex-col mx-auto" style={{ maxWidth: 480 }}>
         {/* Header */}
-        <header className="px-6 pt-12 pb-4 flex items-center justify-between z-20 shrink-0">
+        <header className="px-6 pt-14 pb-4 flex items-center justify-between z-20 shrink-0">
           <div 
-            className="flex items-center gap-2 cursor-pointer"
+            className="flex items-center gap-2 cursor-pointer group"
             onClick={() => setConnected(!connected)}
           >
-            <div className={`p-2 rounded-full transition-colors duration-500 ${connected ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-white/40'}`}>
-              <Bluetooth className="w-4 h-4" />
+            <div 
+              className="p-2 rounded-full transition-all duration-700"
+              style={{ 
+                background: connected ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.05)',
+              }}
+            >
+              <Bluetooth className={`w-3.5 h-3.5 transition-colors duration-500 ${connected ? 'text-blue-400' : 'text-white/20'}`} />
             </div>
-            <span className="text-xs font-medium text-white/80 transition-colors">{connected ? 'Aura Mask 已连接' : '未连接'}</span>
+            <span className="text-[11px] font-medium text-white/40 transition-colors group-hover:text-white/60">{connected ? '已连接' : '未连接'}</span>
           </div>
-          <div className="flex items-center gap-1.5 text-white/80">
-            <span className="text-xs font-medium">{battery}%</span>
-            {battery > 80 ? <BatteryFull className="w-5 h-5" /> : battery > 30 ? <BatteryMedium className="w-5 h-5" /> : <BatteryLow className="w-5 h-5 text-red-400" />}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-medium text-white/30">{battery}%</span>
+            {battery > 80 ? <BatteryFull className="w-4 h-4 text-white/20" /> : battery > 30 ? <BatteryMedium className="w-4 h-4 text-white/20" /> : <BatteryLow className="w-4 h-4 text-red-400/60" />}
           </div>
         </header>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto no-scrollbar relative z-10 pb-28">
+        <div className="flex-1 no-scrollbar relative z-10 pb-16">
           <AnimatePresence mode="wait">
             {activeTab === 'control' && <ControlTab key="control" activeMode={activeMode} setActiveMode={setActiveMode} timer={timer} setTimer={setTimer} />}
             {activeTab === 'alarm' && <AlarmTab key="alarm" />}
@@ -61,21 +74,36 @@ export default function AuraMaskApp() {
           </AnimatePresence>
         </div>
 
-        {/* Bottom Navigation */}
-        <nav className="absolute bottom-0 w-full pb-8 pt-4 px-6 bg-gradient-to-t from-black via-black/80 to-transparent z-30 pointer-events-none">
-          <div className="flex items-center justify-around bg-white/10 backdrop-blur-xl border border-white/10 rounded-full px-2 py-2 shadow-2xl pointer-events-auto">
-            {TABS.map(t => (
-              <button 
-                key={t.id}
-                onClick={() => setActiveTab(t.id)}
-                className="relative px-4 py-3 flex items-center justify-center rounded-full transition-colors outline-none"
-              >
-                {activeTab === t.id && (
-                  <motion.div layoutId="nav-pill" className="absolute inset-0 bg-white/20 rounded-full shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]" />
-                )}
-                <t.icon className={`w-5 h-5 relative z-10 transition-colors duration-300 ${activeTab === t.id ? 'text-white' : 'text-white/40'}`} />
-              </button>
-            ))}
+        {/* Bottom Navigation - compact floating pill */}
+        <nav className="fixed bottom-2 left-1/2 -translate-x-1/2 w-full z-30 pointer-events-none" style={{ maxWidth: 480 }}>
+          <div className="flex items-center justify-center">
+            <div 
+              className="flex items-center justify-around rounded-full px-2 py-1.5 gap-0.5 pointer-events-auto"
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                backdropFilter: 'blur(30px)',
+                WebkitBackdropFilter: 'blur(30px)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)',
+              }}
+            >
+              {TABS.map(t => (
+                <button 
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className="relative px-3.5 py-2 flex items-center justify-center rounded-full transition-colors outline-none"
+                >
+                  {activeTab === t.id && (
+                    <motion.div 
+                      layoutId="nav-pill" 
+                      className="absolute inset-0.5 rounded-full shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
+                      style={{ background: 'rgba(255,255,255,0.15)' }}
+                    />
+                  )}
+                  <t.icon className={`w-4 h-4 relative z-10 transition-colors duration-500 ${activeTab === t.id ? 'text-white' : 'text-white/20'}`} />
+                </button>
+              ))}
+            </div>
           </div>
         </nav>
       </div>
@@ -85,118 +113,327 @@ export default function AuraMaskApp() {
 
 // Subcomponents
 
-function Background({ modeId }: { modeId: string }) {
-  const mode = MODES.find(m => m.id === modeId) || MODES[3];
+function Background({ modeId }: { modeId: string | null }) {
+  const mode = MODES.find(m => m.id === modeId) || MODES[0];
+  const isOff = !modeId;
   
-  return (
-    <div className="absolute inset-0 -z-10 bg-neutral-950 overflow-hidden pointer-events-none">
-      <div className="absolute inset-0 opacity-50 sm:opacity-60">
-        <motion.div
-          animate={{
-            x: [0, 60, -30, 0],
-            y: [0, 40, 80, 0],
-            scale: [1, 1.2, 0.9, 1]
-          }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-          className={`absolute top-[-20%] left-[-20%] w-[120vw] h-[120vw] sm:w-[800px] sm:h-[800px] rounded-full blur-[100px] transition-colors duration-[3000ms] ease-in-out ${mode.colors[0]} opacity-50`}
-        />
-        
-        <motion.div
-          animate={{
-            x: [0, -80, 40, 0],
-            y: [0, -50, -100, 0],
-            scale: [1, 1.1, 1.3, 1]
-          }}
-          transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
-          className={`absolute bottom-[-20%] right-[-20%] w-[140vw] h-[140vw] sm:w-[900px] sm:h-[900px] rounded-full blur-[120px] transition-colors duration-[3000ms] ease-in-out ${mode.colors[1]} opacity-40`}
-        />
+  const orbs = useMemo(() => {
+    const orbConfigs = [
+      { size: 55, blur: 90, x: 15, y: 20, colIdx: 0, op: 0.25 },
+      { size: 45, blur: 100, x: 70, y: 15, colIdx: 1, op: 0.2 },
+      { size: 65, blur: 80, x: 40, y: 60, colIdx: 2, op: 0.22 },
+      { size: 50, blur: 95, x: 80, y: 50, colIdx: 3, op: 0.18 },
+      { size: 40, blur: 75, x: 25, y: 70, colIdx: 4, op: 0.2 },
+      { size: 60, blur: 85, x: 55, y: 35, colIdx: 5, op: 0.15 },
+      { size: 35, blur: 65, x: 85, y: 75, colIdx: 1, op: 0.2 },
+      { size: 50, blur: 90, x: 10, y: 50, colIdx: 0, op: 0.15 },
+    ];
+    if (isOff) return orbConfigs.slice(0, 2).map(o => ({ ...o, op: 0.03 }));
+    return orbConfigs;
+  }, [isOff]);
 
-        <motion.div
-          animate={{
-            x: [0, 50, -50, 0],
-            y: [0, -70, 50, 0],
-            scale: [1, 1.3, 0.8, 1]
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-          className={`absolute top-[30%] left-[10%] w-[100vw] h-[100vw] sm:w-[700px] sm:h-[700px] rounded-full blur-[90px] transition-colors duration-[3000ms] ease-in-out ${mode.colors[2]} opacity-30`}
+  return (
+    <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none" style={{ background: '#000000' }}>
+      {/* Barely visible base tint */}
+      {!isOff && (
+        <div 
+          className="absolute inset-0 transition-all duration-[6000ms] ease-in-out"
+          style={{ background: `radial-gradient(ellipse at 50% 35%, ${mode.colors[0]}03 0%, #000000 60%)` }}
         />
-      </div>
-      
-      {/* Subtle noise texture for premium feel */}
-      <div className="absolute inset-0 opacity-[0.04] mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
+      )}
+
+      {/* Breathing color wave layer */}
+      {!isOff && (
+        <motion.div
+          className="absolute inset-0"
+          animate={{
+            opacity: [0.4, 0.7, 0.5, 0.8, 0.4],
+            background: [
+              `radial-gradient(ellipse at 25% 30%, ${mode.colors[0]} 0%, transparent 50%), radial-gradient(ellipse at 75% 65%, ${mode.colors[2]} 0%, transparent 50%)`,
+              `radial-gradient(ellipse at 60% 25%, ${mode.colors[3]} 0%, transparent 55%), radial-gradient(ellipse at 35% 70%, ${mode.colors[1]} 0%, transparent 55%)`,
+              `radial-gradient(ellipse at 50% 45%, ${mode.colors[4]} 0%, transparent 50%), radial-gradient(ellipse at 55% 55%, ${mode.colors[0]} 0%, transparent 50%)`,
+              `radial-gradient(ellipse at 40% 65%, ${mode.colors[5]} 0%, transparent 48%), radial-gradient(ellipse at 65% 35%, ${mode.colors[2]} 0%, transparent 48%)`,
+              `radial-gradient(ellipse at 25% 30%, ${mode.colors[0]} 0%, transparent 50%), radial-gradient(ellipse at 75% 65%, ${mode.colors[2]} 0%, transparent 50%)`,
+            ],
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          style={{ filter: 'blur(80px)' }}
+        />
+      )}
+
+      {/* Breathing orbs - pulse like heartbeats, each at different rhythm */}
+      {orbs.map((orb, i) => {
+        const breatheDur = 4 + i * 0.8;
+        const color = mode.colors[orb.colIdx % mode.colors.length];
+        return (
+          <motion.div
+            key={`orb-${modeId}-${i}`}
+            className="absolute rounded-full transition-colors duration-[5000ms] ease-in-out"
+            style={{
+              width: `${orb.size}vh`,
+              height: `${orb.size}vh`,
+              left: `${orb.x}%`,
+              top: `${orb.y}%`,
+              background: color,
+              filter: `blur(${orb.blur}px)`,
+              transform: 'translate(-50%, -50%)',
+              willChange: 'transform, opacity',
+            }}
+            animate={{
+              opacity: [orb.op * 0.3, orb.op, orb.op * 0.4, orb.op * 0.9, orb.op * 0.3],
+              scale: [1, 1.3, 0.95, 1.2, 1],
+              x: [0, 30, -20, 15, 0],
+              y: [0, -25, 35, -15, 0],
+            }}
+            transition={{
+              duration: breatheDur,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: i * 0.5,
+            }}
+          />
+        );
+      })}
+
+      {/* Rising sparkle particles */}
+      {!isOff && Array.from({ length: 25 }).map((_, i) => {
+        const size = 1 + Math.random() * 2;
+        const dur = 3 + Math.random() * 6;
+        const col = mode.colors[i % mode.colors.length];
+        return (
+          <motion.div
+            key={`dot-${i}`}
+            className="absolute rounded-full"
+            style={{
+              width: size,
+              height: size,
+              background: col,
+              boxShadow: `0 0 ${size * 3}px ${col}`,
+              left: `${Math.random() * 100}%`,
+              top: `${60 + Math.random() * 40}%`,
+            }}
+            animate={{
+              opacity: [0, 0.5, 0],
+              y: [0, -100 - Math.random() * 80],
+              x: [0, (Math.random() - 0.5) * 50],
+              scale: [0, 1, 0.3],
+            }}
+            transition={{
+              duration: dur,
+              repeat: Infinity,
+              delay: Math.random() * dur,
+              ease: "easeOut",
+            }}
+          />
+        );
+      })}
+
+      {/* Vignette */}
+      <div 
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse at center, transparent 25%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.85) 90%)',
+        }}
+      />
+
+      {/* Noise */}
+      <div 
+        className="absolute inset-0 opacity-[0.02] mix-blend-overlay" 
+        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.75\' numOctaves=\'3\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")' }} 
+      />
     </div>
   )
 }
 
 function ControlTab({ activeMode, setActiveMode, timer, setTimer }: any) {
-  const mode = MODES.find(m => m.id === activeMode) || MODES[3];
+  const mode = MODES.find(m => m.id === activeMode) || MODES[0];
+  const mainColor = mode.colors[0];
+  const isOff = !activeMode;
+  
   return (
     <motion.div 
-      initial={{ opacity: 0, filter: 'blur(10px)' }} 
-      animate={{ opacity: 1, filter: 'blur(0px)' }} 
-      exit={{ opacity: 0, filter: 'blur(10px)' }}
-      transition={{ duration: 0.5 }}
-      className="flex flex-col items-center px-6 pt-6"
+      initial={{ opacity: 0, y: 20 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
+      className="flex flex-col items-center px-6 pt-4"
     >
       {/* Central Visualizer */}
-      <div className="relative w-64 h-64 flex items-center justify-center mb-10">
+      <div className="relative w-64 h-64 flex items-center justify-center mb-8">
+        {!isOff && (
+          <>
+            <motion.div
+              animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2] }}
+              transition={{ duration: mode.id === 'resonance' ? 11 : mode.id === '478' ? 19 : 8, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute inset-0 rounded-full blur-3xl"
+              style={{ background: mainColor }}
+            />
+            <motion.div
+              animate={{ scale: [1.1, 0.9, 1.1], opacity: [0.4, 0.15, 0.4] }}
+              transition={{ duration: mode.id === 'resonance' ? 11 : mode.id === '478' ? 19 : 8, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+              className="absolute inset-4 rounded-full blur-2xl"
+              style={{ background: mode.colors[2] }}
+            />
+          </>
+        )}
+        
+        {/* Orbiting ring */}
         <motion.div
-           animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.1, 0.3] }}
-           transition={{ duration: activeMode === 'resonance' ? 11 : activeMode === '478' ? 19 : 6, repeat: Infinity, ease: "easeInOut" }}
-           className={`absolute inset-0 rounded-full blur-3xl ${mode.colors[1]} opacity-30 transition-colors duration-1000`}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-0 rounded-full"
+          style={{ 
+            border: !isOff ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(255,255,255,0.02)',
+          }}
         />
-        <div className="relative z-10 w-48 h-48 rounded-full border border-white/10 flex items-center justify-center backdrop-blur-xl bg-white/5 shadow-[inset_0_0_40px_rgba(255,255,255,0.05)]">
-           <mode.icon className="w-16 h-16 text-white/90" strokeWidth={1} />
-        </div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center mt-20 pointer-events-none">
-          <p className="text-white/60 text-sm tracking-widest whitespace-nowrap">{mode.name}</p>
+        <motion.div
+          animate={{ rotate: -360 }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-8 rounded-full"
+          style={{ 
+            border: !isOff ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(255,255,255,0.01)',
+          }}
+        />
+
+        {/* Ripple rings at varying positions */}
+        {!isOff && [
+          { x: 30, y: 40, dur: 5, delay: 0 },
+          { x: 70, y: 30, dur: 6, delay: 1.5 },
+          { x: 50, y: 65, dur: 4.5, delay: 3 },
+        ].map((r, i) => {
+          const color = mode.colors[i % mode.colors.length];
+          return (
+            <motion.div
+              key={`c-ripple-${i}`}
+              className="absolute rounded-full pointer-events-none"
+              style={{
+                left: `${r.x}%`,
+                top: `${r.y}%`,
+                width: '70vh',
+                height: '70vh',
+                borderColor: color,
+                willChange: 'transform, opacity',
+                transform: 'translate(-50%, -50%) scale(0)',
+              }}
+              animate={{
+                scale: [0, 1],
+                opacity: [0.3, 0],
+                borderWidth: ['1.5px', '0.2px'],
+              }}
+              transition={{
+                duration: r.dur,
+                repeat: Infinity,
+                delay: r.delay,
+                ease: "easeOut",
+              }}
+            />
+          );
+        })}
+
+        {/* Center circle - frosted glass */}
+        {isOff ? (
+          <div className="relative z-10 w-44 h-44 rounded-full flex items-center justify-center"
+            style={{
+              background: 'rgba(255,255,255,0.01)',
+              border: '1px solid rgba(255,255,255,0.03)',
+              boxShadow: 'inset 0 0 20px rgba(255,255,255,0.01)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+            }}
+          >
+            <div className="w-2 h-2 rounded-full bg-white/10" />
+          </div>
+        ) : (
+          <div className="relative z-10 w-44 h-44 rounded-full flex items-center justify-center"
+            style={{
+              background: `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), rgba(255,255,255,0.03))`,
+              border: '1px solid rgba(255,255,255,0.1)',
+              boxShadow: `inset 0 0 60px rgba(255,255,255,0.03), 0 0 30px ${mainColor}20`,
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+            }}
+          >
+            <mode.icon className="w-14 h-14 text-white/80" strokeWidth={1} />
+          </div>
+        )}
+        
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center mt-16 pointer-events-none">
+          <p className="text-white/40 text-xs tracking-[0.3em] uppercase whitespace-nowrap">{isOff ? '已关闭' : mode.name}</p>
         </div>
       </div>
 
       {/* Mode Selector */}
-      <div className="w-full flex gap-3 overflow-x-auto no-scrollbar py-4 snap-x snap-mandatory px-1">
-        {MODES.map(m => (
-          <button
-            key={m.id}
-            onClick={() => setActiveMode(m.id)}
-            className={`snap-center shrink-0 w-36 p-4 rounded-3xl border flex flex-col items-start gap-4 transition-all duration-500 outline-none
-              ${activeMode === m.id ? 'bg-white/20 border-white/30 backdrop-blur-xl shadow-xl' : 'bg-white/5 border-white/5 backdrop-blur-md text-white/50 hover:bg-white/10'}`}
-          >
-            <div className={`p-2.5 rounded-full transition-colors duration-500 ${activeMode === m.id ? 'bg-white/20 text-white' : 'bg-white/5 text-white/50'}`}>
-              <m.icon className="w-5 h-5" />
-            </div>
-            <div className="text-left">
-              <p className={`font-medium text-sm transition-colors duration-500 ${activeMode === m.id ? 'text-white' : 'text-white/70'}`}>{m.name}</p>
-              <p className="text-[10px] mt-1 text-white/50 line-clamp-2 leading-relaxed">{m.desc}</p>
-            </div>
-          </button>
-        ))}
+      <div className="w-full flex gap-2 py-4">
+        {MODES.map(m => {
+          const isActive = activeMode === m.id;
+          return (
+            <button
+              key={m.id}
+              onClick={() => setActiveMode(isActive ? null : m.id)}
+              className="flex-1 p-3 rounded-[24px] flex flex-col items-center gap-3 transition-all duration-700 outline-none"
+              style={{
+                background: isActive ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.02)',
+                border: 'none',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                boxShadow: isActive ? `0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)` : 'none',
+              }}
+            >
+              <div 
+                className="p-2 rounded-full transition-all duration-700"
+                style={{
+                  background: isActive ? `${m.colors[0]}30` : 'rgba(255,255,255,0.04)',
+                  color: isActive ? m.colors[0] : 'rgba(255,255,255,0.4)',
+                }}
+              >
+                <m.icon className="w-5 h-5" />
+              </div>
+              <div className="text-center">
+                <p 
+                  className="font-medium text-xs transition-colors duration-700"
+                  style={{ color: isActive ? '#fff' : 'rgba(255,255,255,0.5)' }}
+                >{m.name}</p>
+                <p className="text-[9px] mt-1 text-white/20 line-clamp-2 leading-relaxed">{m.desc}</p>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Timer Slider */}
-      <div className="w-full mt-6 p-6 rounded-3xl bg-white/5 backdrop-blur-md border border-white/10">
-        <div className="flex justify-between items-end mb-6">
-          <div>
-            <p className="text-xs text-white/50 font-medium tracking-wide">定时关闭</p>
-            <div className="flex items-baseline gap-1 mt-1">
-              <p className="text-4xl font-display font-light text-white">{timer}</p>
-              <p className="text-sm text-white/50">分钟</p>
-            </div>
+      {/* Timer - compact */}
+      <div 
+        className="w-full mt-5 p-4 rounded-[22px] transition-all duration-700"
+        style={{
+          background: 'rgba(255,255,255,0.03)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255,255,255,0.04)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.01)',
+        }}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[11px] text-white/25 font-medium tracking-widest uppercase">定时关闭</p>
+          <div className="flex items-baseline gap-1">
+            <p className="text-3xl font-display font-thin text-white/60 tracking-tight">{timer}</p>
+            <p className="text-[11px] text-white/20">分钟</p>
           </div>
-          <Clock className="w-6 h-6 text-white/20 mb-1" strokeWidth={1.5} />
         </div>
-        <div className="relative w-full h-8 flex items-center">
+        <div className="relative w-full h-6 flex items-center">
           <input 
             type="range" 
             min="1" max="60" 
             value={timer} 
             onChange={e => setTimer(parseInt(e.target.value))}
             className="w-full relative z-10"
+            style={{ accentColor: mainColor }}
           />
-          {/* Custom progress fill overlay */}
           <div 
-            className="absolute left-0 h-1 bg-white rounded-l-full pointer-events-none transition-all duration-75"
-            style={{ width: `calc(${(timer - 1) / 59 * 100}% + 2px)` }}
+            className="absolute left-0 h-[2px] rounded-full pointer-events-none transition-all duration-75"
+            style={{ 
+              width: `calc(${(timer - 1) / 59 * 100}% + 2px)`,
+              background: `linear-gradient(90deg, ${mainColor}60, ${mainColor})`,
+              boxShadow: `0 0 6px ${mainColor}30`,
+            }}
           />
         </div>
       </div>
@@ -216,46 +453,72 @@ function AlarmTab() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, filter: 'blur(10px)' }} 
-      animate={{ opacity: 1, filter: 'blur(0px)' }} 
-      exit={{ opacity: 0, filter: 'blur(10px)' }}
-      transition={{ duration: 0.5 }}
-      className="px-6 pt-6"
+      initial={{ opacity: 0, y: 20 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
+      className="px-6 pt-2"
     >
-      <h2 className="text-3xl font-display font-light mb-8">光效闹钟</h2>
+      <h2 className="text-3xl font-display font-thin mb-6 text-white/90 tracking-tight">光效闹钟</h2>
       
-      <div className="space-y-4">
+      <div className="space-y-3">
         {alarms.map((alarm) => (
-          <div key={alarm.id} className={`p-5 rounded-3xl border transition-all duration-500 flex justify-between items-center ${alarm.enabled ? 'bg-white/10 border-white/20 backdrop-blur-xl' : 'bg-white/5 border-white/5 opacity-60 backdrop-blur-md'}`}>
+          <div 
+            key={alarm.id} 
+            className="p-5 rounded-[28px] transition-all duration-700 flex justify-between items-center"
+            style={{
+              background: alarm.enabled ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.02)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: alarm.enabled ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.03)',
+              boxShadow: alarm.enabled ? 'inset 0 1px 0 rgba(255,255,255,0.03)' : 'none',
+              opacity: alarm.enabled ? 1 : 0.4,
+            }}
+          >
             <div>
-              <p className="text-4xl font-light font-display tracking-tight">{alarm.time}</p>
+              <p className="text-4xl font-thin font-display tracking-tight text-white">{alarm.time}</p>
               <div className="flex gap-2 mt-3 items-center">
-                <span className="text-xs font-medium text-white/80 bg-white/10 px-2.5 py-1 rounded-full">{alarm.label}</span>
-                <span className="text-xs text-white/40">{alarm.days}</span>
+                <span 
+                  className="text-[11px] font-medium px-2.5 py-1 rounded-full"
+                  style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)' }}
+                >{alarm.label}</span>
+                <span className="text-[11px] text-white/20">{alarm.days}</span>
               </div>
             </div>
-            {/* Toggle Switch */}
             <button 
               onClick={() => toggleAlarm(alarm.id)}
-              className={`w-14 h-8 rounded-full p-1 transition-colors duration-500 flex items-center outline-none ${alarm.enabled ? 'bg-white' : 'bg-white/20'}`}
+              className="w-14 h-8 rounded-full p-1 transition-all duration-500 flex items-center outline-none"
+              style={{ 
+                background: alarm.enabled ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.1)',
+              }}
             >
               <motion.div 
                 layout
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className={`w-6 h-6 rounded-full shadow-sm ${alarm.enabled ? 'bg-neutral-900 ml-6' : 'bg-white/80'}`}
+                className="w-6 h-6 rounded-full shadow-sm"
+                style={{ background: alarm.enabled ? '#1a1a2e' : 'rgba(255,255,255,0.6)', marginLeft: alarm.enabled ? '24px' : '0' }}
               />
             </button>
           </div>
         ))}
       </div>
 
-      <button className="w-full mt-6 py-4 rounded-[1.5rem] border border-white/20 text-white/80 flex items-center justify-center gap-2 hover:bg-white/10 transition-colors backdrop-blur-md">
-        <Plus className="w-5 h-5" />
+      <button 
+        className="w-full mt-5 py-4 rounded-[24px] flex items-center justify-center gap-2 transition-all duration-500"
+        style={{
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          color: 'rgba(255,255,255,0.5)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+        }}
+      >
+        <Plus className="w-4 h-4" />
         <span className="font-medium text-sm tracking-wide">添加闹钟</span>
       </button>
 
-      <p className="text-center mt-8 text-xs text-white/40 leading-relaxed px-4">
-        眼罩会在闹钟时间前 30 分钟逐渐亮起<br/>模拟日出自然唤醒。
+      <p className="text-center mt-8 text-[11px] text-white/20 leading-relaxed px-4">
+        眼罩会在闹钟时间前 30 分钟逐渐亮起<br/>模拟日出自然唤醒
       </p>
     </motion.div>
   )
@@ -264,63 +527,94 @@ function AlarmTab() {
 function JetLagTab() {
   return (
     <motion.div 
-      initial={{ opacity: 0, filter: 'blur(10px)' }} 
-      animate={{ opacity: 1, filter: 'blur(0px)' }} 
-      exit={{ opacity: 0, filter: 'blur(10px)' }}
-      transition={{ duration: 0.5 }}
-      className="px-6 pt-6 pb-12"
+      initial={{ opacity: 0, y: 20 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
+      className="px-6 pt-2 pb-12"
     >
-      <h2 className="text-3xl font-display font-light mb-8">时差调整</h2>
+      <h2 className="text-3xl font-display font-thin mb-6 text-white/90 tracking-tight">时差调整</h2>
       
-      <div className="p-6 rounded-3xl bg-white/10 border border-white/20 backdrop-blur-xl mb-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500/30 blur-3xl rounded-full translate-x-10 -translate-y-10"></div>
-        <Plane className="w-6 h-6 text-white/90 mb-5 relative z-10" />
-        <h3 className="text-xl mb-1 font-medium relative z-10">前往：巴黎 (CDG)</h3>
-        <p className="text-sm text-white/60 mb-8 relative z-10">相差 7 小时 • 3天后起飞</p>
+      <div 
+        className="p-6 rounded-[28px] relative overflow-hidden mb-6"
+        style={{
+          background: 'rgba(255,255,255,0.05)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.02)',
+        }}
+      >
+        <div className="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl translate-x-10 -translate-y-10" style={{ background: 'rgba(59,130,246,0.2)' }} />
+        <Plane className="w-5 h-5 text-white/60 mb-4 relative z-10" />
+        <h3 className="text-xl mb-1 font-medium relative z-10 text-white/90">前往：巴黎 (CDG)</h3>
+        <p className="text-sm text-white/30 mb-8 relative z-10">相差 7 小时 · 3天后起飞</p>
 
         <div className="flex items-center justify-between relative z-10">
           <div>
-            <p className="text-xs text-white/50 mb-1">出发地</p>
-            <p className="text-2xl font-light">北京</p>
-            <p className="text-sm text-white/60 mt-1 font-display tracking-wide">21:00</p>
+            <p className="text-[11px] text-white/20 uppercase tracking-wider mb-1">出发地</p>
+            <p className="text-2xl font-thin text-white/80">北京</p>
+            <p className="text-sm text-white/30 mt-1 font-display tracking-wide">21:00</p>
           </div>
           <div className="flex-1 px-6 flex items-center">
-             <div className="h-[1px] bg-white/20 w-full relative">
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white bg-black"></div>
+             <div className="h-[1px] w-full relative" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full" style={{ border: '1px solid rgba(255,255,255,0.2)', background: '#050508' }} />
              </div>
           </div>
           <div className="text-right">
-            <p className="text-xs text-white/50 mb-1">目的地</p>
-            <p className="text-2xl font-light">巴黎</p>
-            <p className="text-sm text-blue-300 mt-1 font-display tracking-wide">14:00</p>
+            <p className="text-[11px] text-white/20 uppercase tracking-wider mb-1">目的地</p>
+            <p className="text-2xl font-thin text-white/80">巴黎</p>
+            <p className="text-sm mt-1 font-display tracking-wide" style={{ color: 'rgba(147,197,253,0.6)' }}>14:00</p>
           </div>
         </div>
       </div>
 
-      <h3 className="text-sm font-medium text-white/80 mb-4 px-2 tracking-wide">今日光照建议</h3>
+      <h3 className="text-sm font-medium text-white/40 mb-4 px-2 tracking-widest uppercase">今日光照建议</h3>
       <div className="space-y-3">
-        <div className="p-5 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md flex gap-4">
+        <div 
+          className="p-5 rounded-[28px] flex gap-4"
+          style={{
+            background: 'rgba(255,255,255,0.03)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.05)',
+          }}
+        >
           <div className="mt-1 shrink-0">
-             <Sun className="w-6 h-6 text-amber-400" />
+             <Sun className="w-5 h-5 text-amber-400/50" />
           </div>
           <div>
             <div className="flex items-center justify-between mb-1">
-              <p className="font-medium text-white/90">寻求光照</p>
-              <p className="text-xs font-display text-amber-400/80 bg-amber-400/10 px-2 py-0.5 rounded-full">08:00 - 12:00</p>
+              <p className="font-medium text-white/70">寻求光照</p>
+              <p 
+                className="text-[10px] font-display px-2 py-0.5 rounded-full"
+                style={{ background: 'rgba(251,191,36,0.1)', color: 'rgba(251,191,36,0.6)' }}
+              >08:00 - 12:00</p>
             </div>
-            <p className="text-xs text-white/50 mt-2 leading-relaxed">推荐使用眼罩的「正念模式」或前往户外接触自然光，帮助推迟生物钟。</p>
+            <p className="text-[11px] text-white/25 mt-2 leading-relaxed">推荐使用眼罩的「正念模式」或前往户外接触自然光，帮助推迟生物钟。</p>
           </div>
         </div>
-        <div className="p-5 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md flex gap-4">
+        <div 
+          className="p-5 rounded-[28px] flex gap-4"
+          style={{
+            background: 'rgba(255,255,255,0.03)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.05)',
+          }}
+        >
           <div className="mt-1 shrink-0">
-             <Moon className="w-6 h-6 text-indigo-400" />
+             <Moon className="w-5 h-5 text-indigo-400/50" />
           </div>
           <div>
             <div className="flex items-center justify-between mb-1">
-              <p className="font-medium text-white/90">避免光照</p>
-              <p className="text-xs font-display text-indigo-400/80 bg-indigo-400/10 px-2 py-0.5 rounded-full">20:00 - 23:00</p>
+              <p className="font-medium text-white/70">避免光照</p>
+              <p 
+                className="text-[10px] font-display px-2 py-0.5 rounded-full"
+                style={{ background: 'rgba(165,180,252,0.1)', color: 'rgba(165,180,252,0.6)' }}
+              >20:00 - 23:00</p>
             </div>
-            <p className="text-xs text-white/50 mt-2 leading-relaxed">佩戴眼罩遮光，或使用「4-7-8 呼吸模式」准备入睡。</p>
+            <p className="text-[11px] text-white/25 mt-2 leading-relaxed">佩戴眼罩遮光，或使用「4-7-8 呼吸模式」准备入睡。</p>
           </div>
         </div>
       </div>
@@ -331,38 +625,62 @@ function JetLagTab() {
 function SettingsTab() {
   return (
     <motion.div 
-      initial={{ opacity: 0, filter: 'blur(10px)' }} 
-      animate={{ opacity: 1, filter: 'blur(0px)' }} 
-      exit={{ opacity: 0, filter: 'blur(10px)' }}
-      transition={{ duration: 0.5 }}
-      className="px-6 pt-6 pb-12"
+      initial={{ opacity: 0, y: 20 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
+      className="px-6 pt-2 pb-12"
     >
-      <h2 className="text-3xl font-display font-light mb-8">设备设置</h2>
+      <h2 className="text-3xl font-display font-thin mb-6 text-white/90 tracking-tight">设备设置</h2>
       
-      <div className="space-y-4">
-        <div className="p-5 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-between cursor-pointer hover:bg-white/10 transition-colors">
+      <div className="space-y-3">
+        <div 
+          className="p-5 rounded-[28px] flex items-center justify-between cursor-pointer transition-all duration-500 hover:brightness-150"
+          style={{
+            background: 'rgba(255,255,255,0.03)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.05)',
+          }}
+        >
           <div>
-            <p className="font-medium">眼罩亮度上限</p>
-            <p className="text-[11px] text-white/50 mt-1">控制最大亮度，保护暗适应视力</p>
+            <p className="font-medium text-white/70 text-[15px]">眼罩亮度上限</p>
+            <p className="text-[11px] text-white/20 mt-1">控制最大亮度，保护暗适应视力</p>
           </div>
-          <span className="text-sm text-white/80 font-medium">70%</span>
+          <span className="text-sm text-white/30 font-medium">70%</span>
         </div>
         
-        <div className="p-5 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-between cursor-pointer hover:bg-white/10 transition-colors">
+        <div 
+          className="p-5 rounded-[28px] flex items-center justify-between cursor-pointer transition-all duration-500 hover:brightness-150"
+          style={{
+            background: 'rgba(255,255,255,0.03)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.05)',
+          }}
+        >
           <div>
-            <p className="font-medium">呼吸光效平滑度</p>
-            <p className="text-[11px] text-white/50 mt-1">影响光线明暗变化的曲线</p>
+            <p className="font-medium text-white/70 text-[15px]">呼吸光效平滑度</p>
+            <p className="text-[11px] text-white/20 mt-1">影响光线明暗变化的曲线</p>
           </div>
-          <span className="text-sm text-white/80 font-medium">自然 (正弦)</span>
+          <span className="text-sm text-white/30 font-medium">自然 (正弦)</span>
         </div>
 
-        <div className="p-5 rounded-3xl bg-white/5 border border-red-500/20 backdrop-blur-md flex items-center justify-center cursor-pointer hover:bg-red-500/10 transition-colors mt-8">
-           <p className="font-medium text-red-400">断开连接</p>
+        <div 
+          className="p-5 rounded-[28px] flex items-center justify-center cursor-pointer transition-all duration-500 mt-6 hover:brightness-150"
+          style={{
+            background: 'rgba(255,255,255,0.02)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(239,68,68,0.1)',
+          }}
+        >
+           <p className="font-medium text-red-400/50 text-[15px]">断开连接</p>
         </div>
       </div>
       
-      <div className="mt-12 text-center">
-        <p className="text-xs text-white/30 font-display">AURA MASK OS v1.2.4</p>
+      <div className="mt-auto pt-16 text-center">
+        <p className="text-[11px] text-white/10 font-display tracking-[0.3em]">AURA MASK OS v1.2.4</p>
       </div>
     </motion.div>
   )

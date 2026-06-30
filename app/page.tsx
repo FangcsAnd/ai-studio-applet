@@ -46,7 +46,7 @@ export default function AuraMaskApp() {
       
       <div className="relative w-full min-h-[100dvh] flex flex-col mx-auto" style={{ maxWidth: 480 }}>
         {/* Header */}
-        <header className="px-6 pt-14 pb-4 flex items-center justify-between z-20 shrink-0">
+        <header className="px-6 pt-6 pb-2 flex items-center justify-between z-20 shrink-0">
           <div 
             className="flex items-center gap-2 cursor-pointer group"
             onClick={() => setConnected(!connected)}
@@ -211,11 +211,11 @@ function Background({ modeId }: { modeId: string | null }) {
               background: col,
               boxShadow: `0 0 ${size * 4}px ${col}, 0 0 ${size * 2}px ${col}80`,
               left: `${Math.random() * 100}%`,
-              top: `${85 + Math.random() * 15}%`,
+              top: '100%',
             }}
             animate={{
               opacity: [0, 0.7, 0],
-              y: [0, -120 - Math.random() * 200],
+              y: [0, -300 - Math.random() * 600],
               x: [0, (Math.random() - 0.5) * 30],
               scale: [0.3, 1, 0.5],
             }}
@@ -287,21 +287,12 @@ function ControlTab({ activeMode, setActiveMode, timer, setTimer }: any) {
     animRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(animRef.current);
   }, [isOff, breath]);
-  
+   
   // Breathing animation scale: 0.5 → 1.0 for inhale, 1.0 for hold, 1.0 → 0.5 for exhale
   const rings = [0, 1, 2, 3, 4, 5];
-  const getRingScale = (ring: number) => {
-    const ringOffset = ring * 0.15;
-    if (phase === 'inhale') return 0.4 + ringOffset + progress * 0.6;
-    if (phase === 'hold') return 1.0 + ringOffset;
-    return 1.0 + ringOffset - progress * 0.6;
-  };
-  
-  const phaseLabel = phase === 'inhale' ? '吸气' : phase === 'hold' ? '屏息' : '呼气';
-  const phaseColor = phase === 'inhale' ? mode.colors[0] : phase === 'hold' ? mode.colors[3] : mode.colors[5];
   
   return (
-    <div className="flex flex-col items-center px-6 pt-2" style={{ opacity: 1 }}>
+    <div className="flex flex-col items-center px-6">
       {/* Central Visualizer */}
       <div className="relative w-72 h-72 flex items-center justify-center mb-6">
         {/* Breathing glow orbs behind */}
@@ -391,11 +382,6 @@ function ControlTab({ activeMode, setActiveMode, timer, setTimer }: any) {
             <mode.icon className="w-12 h-12 text-white/80 relative z-10" strokeWidth={1} />
           </div>
         )}
-        
-        {/* Phase label */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center mt-16 pointer-events-none">
-          <p className="text-white/40 text-xs tracking-[0.3em] uppercase whitespace-nowrap">{isOff ? '已关闭' : mode.name}</p>
-        </div>
       </div>
 
       {/* Mode Selector */}

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { motion } from 'motion/react';
 import { 
   Bluetooth, BatteryFull, BatteryMedium, BatteryLow, 
   Clock, Moon, Sun, Plane, Plus, Settings2,
@@ -11,15 +11,18 @@ import {
 const MODES = [
   { 
     id: 'mindfulness', name: '正念模式', desc: '柔和的光波助你进入冥想状态', icon: Sparkles, 
-    colors: ['#ff6b35', '#f7c948', '#ff8c69', '#ffd700', '#ff6347', '#ffa07a', '#ffb347'] 
+    colors: ['#ff6b35', '#f7c948', '#ff8c69', '#ffd700', '#ff6347', '#ffa07a', '#ffb347'],
+    breath: { inhale: 4, exhale: 6 }
   },
   { 
     id: 'resonance', name: '共振呼吸', desc: '引导 5.5 秒的吸气与呼气节奏', icon: Activity, 
-    colors: ['#00b4d8', '#0077b6', '#48cae4', '#0096c7', '#00a8cc', '#0284c7', '#0ea5e9'] 
+    colors: ['#00b4d8', '#0077b6', '#48cae4', '#0096c7', '#00a8cc', '#0284c7', '#0ea5e9'],
+    breath: { inhale: 5.5, exhale: 5.5 }
   },
   { 
     id: '478', name: '4-7-8 呼吸', desc: '深度放松，快速平复心率准备入眠', icon: Wind, 
-    colors: ['#6366f1', '#8b5cf6', '#a855f7', '#7c3aed', '#6d28d9', '#c084fc', '#a78bfa'] 
+    colors: ['#6366f1', '#8b5cf6', '#a855f7', '#7c3aed', '#6d28d9', '#c084fc', '#a78bfa'],
+    breath: { inhale: 4, hold: 7, exhale: 8 }
   },
 ];
 
@@ -54,24 +57,22 @@ export default function AuraMaskApp() {
                 background: connected ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.05)',
               }}
             >
-              <Bluetooth className={`w-3.5 h-3.5 transition-colors duration-500 ${connected ? 'text-blue-400' : 'text-white/20'}`} />
+              <Bluetooth className={`w-3.5 h-3.5 transition-colors duration-500 ${connected ? 'text-blue-400' : 'text-white/40'}`} />
             </div>
-            <span className="text-[11px] font-medium text-white/40 transition-colors group-hover:text-white/60">{connected ? '已连接' : '未连接'}</span>
+            <span className="text-[11px] font-medium text-white/50 transition-colors group-hover:text-white/90">{connected ? '已连接' : '未连接'}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-medium text-white/30">{battery}%</span>
-            {battery > 80 ? <BatteryFull className="w-4 h-4 text-white/20" /> : battery > 30 ? <BatteryMedium className="w-4 h-4 text-white/20" /> : <BatteryLow className="w-4 h-4 text-red-400/60" />}
+            <span className="text-[11px] font-medium text-white/40">{battery}%</span>
+            {battery > 80 ? <BatteryFull className="w-4 h-4 text-white/40" /> : battery > 30 ? <BatteryMedium className="w-4 h-4 text-white/40" /> : <BatteryLow className="w-4 h-4 text-red-400/60" />}
           </div>
         </header>
 
         {/* Content Area */}
         <div className="flex-1 no-scrollbar relative z-10 pb-16">
-          <AnimatePresence mode="wait">
-            {activeTab === 'control' && <ControlTab key="control" activeMode={activeMode} setActiveMode={setActiveMode} timer={timer} setTimer={setTimer} />}
-            {activeTab === 'alarm' && <AlarmTab key="alarm" />}
-            {activeTab === 'jetlag' && <JetLagTab key="jetlag" />}
-            {activeTab === 'settings' && <SettingsTab key="settings" />}
-          </AnimatePresence>
+        {activeTab === 'control' && <ControlTab key="control" activeMode={activeMode} setActiveMode={setActiveMode} timer={timer} setTimer={setTimer} />}
+        {activeTab === 'alarm' && <AlarmTab key="alarm" />}
+        {activeTab === 'jetlag' && <JetLagTab key="jetlag" />}
+        {activeTab === 'settings' && <SettingsTab key="settings" />}
         </div>
 
         {/* Bottom Navigation - compact floating pill */}
@@ -100,7 +101,7 @@ export default function AuraMaskApp() {
                       style={{ background: 'rgba(255,255,255,0.15)' }}
                     />
                   )}
-                  <t.icon className={`w-4 h-4 relative z-10 transition-colors duration-500 ${activeTab === t.id ? 'text-white' : 'text-white/20'}`} />
+                  <t.icon className={`w-4 h-4 relative z-10 transition-colors duration-500 ${activeTab === t.id ? 'text-white' : 'text-white/40'}`} />
                 </button>
               ))}
             </div>
@@ -119,16 +120,16 @@ function Background({ modeId }: { modeId: string | null }) {
   
   const orbs = useMemo(() => {
     const orbConfigs = [
-      { size: 55, blur: 90, x: 15, y: 20, colIdx: 0, op: 0.25 },
-      { size: 45, blur: 100, x: 70, y: 15, colIdx: 1, op: 0.2 },
-      { size: 65, blur: 80, x: 40, y: 60, colIdx: 2, op: 0.22 },
-      { size: 50, blur: 95, x: 80, y: 50, colIdx: 3, op: 0.18 },
-      { size: 40, blur: 75, x: 25, y: 70, colIdx: 4, op: 0.2 },
-      { size: 60, blur: 85, x: 55, y: 35, colIdx: 5, op: 0.15 },
-      { size: 35, blur: 65, x: 85, y: 75, colIdx: 1, op: 0.2 },
-      { size: 50, blur: 90, x: 10, y: 50, colIdx: 0, op: 0.15 },
+      { size: 55, blur: 90, x: 15, y: 20, colIdx: 0, op: 0.18, dur: 20 },
+      { size: 45, blur: 100, x: 70, y: 15, colIdx: 1, op: 0.14, dur: 23 },
+      { size: 60, blur: 80, x: 40, y: 60, colIdx: 2, op: 0.15, dur: 25 },
+      { size: 50, blur: 95, x: 80, y: 50, colIdx: 3, op: 0.12, dur: 19 },
+      { size: 40, blur: 75, x: 25, y: 70, colIdx: 4, op: 0.15, dur: 22 },
+      { size: 55, blur: 85, x: 55, y: 35, colIdx: 5, op: 0.11, dur: 27 },
+      { size: 35, blur: 65, x: 85, y: 75, colIdx: 1, op: 0.14, dur: 18 },
+      { size: 50, blur: 90, x: 10, y: 50, colIdx: 0, op: 0.1, dur: 24 },
     ];
-    if (isOff) return orbConfigs.slice(0, 2).map(o => ({ ...o, op: 0.03 }));
+    if (isOff) return orbConfigs.slice(0, 2).map(o => ({ ...o, op: 0.02 }));
     return orbConfigs;
   }, [isOff]);
 
@@ -137,17 +138,17 @@ function Background({ modeId }: { modeId: string | null }) {
       {/* Barely visible base tint */}
       {!isOff && (
         <div 
-          className="absolute inset-0 transition-all duration-[6000ms] ease-in-out"
-          style={{ background: `radial-gradient(ellipse at 50% 35%, ${mode.colors[0]}03 0%, #000000 60%)` }}
+          className="absolute inset-0"
+          style={{ background: `radial-gradient(ellipse at 50% 35%, ${mode.colors[0]}02 0%, #000000 60%)` }}
         />
       )}
 
-      {/* Breathing color wave layer */}
+      {/* Breathing color wave */}
       {!isOff && (
         <motion.div
           className="absolute inset-0"
           animate={{
-            opacity: [0.4, 0.7, 0.5, 0.8, 0.4],
+            opacity: [0.3, 0.6, 0.4, 0.7, 0.3],
             background: [
               `radial-gradient(ellipse at 25% 30%, ${mode.colors[0]} 0%, transparent 50%), radial-gradient(ellipse at 75% 65%, ${mode.colors[2]} 0%, transparent 50%)`,
               `radial-gradient(ellipse at 60% 25%, ${mode.colors[3]} 0%, transparent 55%), radial-gradient(ellipse at 35% 70%, ${mode.colors[1]} 0%, transparent 55%)`,
@@ -161,14 +162,14 @@ function Background({ modeId }: { modeId: string | null }) {
         />
       )}
 
-      {/* Breathing orbs - pulse like heartbeats, each at different rhythm */}
+      {/* Breathing orbs */}
       {orbs.map((orb, i) => {
-        const breatheDur = 4 + i * 0.8;
+        const breatheDur = 16 + i * 1.2;
         const color = mode.colors[orb.colIdx % mode.colors.length];
         return (
           <motion.div
             key={`orb-${modeId}-${i}`}
-            className="absolute rounded-full transition-colors duration-[5000ms] ease-in-out"
+            className="absolute rounded-full"
             style={{
               width: `${orb.size}vh`,
               height: `${orb.size}vh`,
@@ -180,25 +181,25 @@ function Background({ modeId }: { modeId: string | null }) {
               willChange: 'transform, opacity',
             }}
             animate={{
-              opacity: [orb.op * 0.3, orb.op, orb.op * 0.4, orb.op * 0.9, orb.op * 0.3],
-              scale: [1, 1.3, 0.95, 1.2, 1],
-              x: [0, 30, -20, 15, 0],
-              y: [0, -25, 35, -15, 0],
+              opacity: [orb.op * 0.3, orb.op, orb.op * 0.2, orb.op * 0.9, orb.op * 0.3],
+              scale: [1, 1.3, 0.92, 1.2, 1],
+              x: [0, 40, -25, 20, 0],
+              y: [0, -30, 40, -20, 0],
             }}
             transition={{
               duration: breatheDur,
               repeat: Infinity,
               ease: "easeInOut",
-              delay: i * 0.5,
+              delay: i * 0.8,
             }}
           />
         );
       })}
 
-      {/* Rising sparkle particles */}
-      {!isOff && Array.from({ length: 25 }).map((_, i) => {
-        const size = 1 + Math.random() * 2;
-        const dur = 3 + Math.random() * 6;
+      {/* Rising sparkle particles - bubble style */}
+      {!isOff && Array.from({ length: 70 }).map((_, i) => {
+        const size = 3 + Math.random() * 5;
+        const dur = 2 + Math.random() * 4;
         const col = mode.colors[i % mode.colors.length];
         return (
           <motion.div
@@ -208,15 +209,15 @@ function Background({ modeId }: { modeId: string | null }) {
               width: size,
               height: size,
               background: col,
-              boxShadow: `0 0 ${size * 3}px ${col}`,
+              boxShadow: `0 0 ${size * 4}px ${col}, 0 0 ${size * 2}px ${col}80`,
               left: `${Math.random() * 100}%`,
-              top: `${60 + Math.random() * 40}%`,
+              top: `${85 + Math.random() * 15}%`,
             }}
             animate={{
-              opacity: [0, 0.5, 0],
-              y: [0, -100 - Math.random() * 80],
-              x: [0, (Math.random() - 0.5) * 50],
-              scale: [0, 1, 0.3],
+              opacity: [0, 0.7, 0],
+              y: [0, -120 - Math.random() * 200],
+              x: [0, (Math.random() - 0.5) * 30],
+              scale: [0.3, 1, 0.5],
             }}
             transition={{
               duration: dur,
@@ -238,7 +239,7 @@ function Background({ modeId }: { modeId: string | null }) {
 
       {/* Noise */}
       <div 
-        className="absolute inset-0 opacity-[0.02] mix-blend-overlay" 
+        className="absolute inset-0 opacity-[0.015] mix-blend-overlay" 
         style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.75\' numOctaves=\'3\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")' }} 
       />
     </div>
@@ -249,121 +250,156 @@ function ControlTab({ activeMode, setActiveMode, timer, setTimer }: any) {
   const mode = MODES.find(m => m.id === activeMode) || MODES[0];
   const mainColor = mode.colors[0];
   const isOff = !activeMode;
+  const breath = mode.breath;
+  
+  // Breathing animation state
+  const [phase, setPhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
+  const [progress, setProgress] = useState(0);
+  const animRef = useRef<number>(0);
+  
+  useEffect(() => {
+    if (isOff) return;
+    const total = breath.hold 
+      ? breath.inhale + breath.hold + breath.exhale 
+      : breath.inhale + breath.exhale;
+    let start = performance.now();
+    
+    const tick = (now: number) => {
+      let elapsed = ((now - start) / 1000) % total;
+      let p: number, ph: 'inhale' | 'hold' | 'exhale';
+      
+      if (elapsed < breath.inhale) {
+        p = elapsed / breath.inhale;
+        ph = 'inhale';
+      } else if (breath.hold && elapsed < breath.inhale + breath.hold) {
+        p = (elapsed - breath.inhale) / breath.hold;
+        ph = 'hold';
+      } else {
+        elapsed -= breath.inhale + (breath.hold || 0);
+        p = elapsed / breath.exhale;
+        ph = 'exhale';
+      }
+      setProgress(p);
+      setPhase(ph);
+      animRef.current = requestAnimationFrame(tick);
+    };
+    
+    animRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animRef.current);
+  }, [isOff, breath]);
+  
+  // Breathing animation scale: 0.5 → 1.0 for inhale, 1.0 for hold, 1.0 → 0.5 for exhale
+  const rings = [0, 1, 2, 3, 4, 5];
+  const getRingScale = (ring: number) => {
+    const ringOffset = ring * 0.15;
+    if (phase === 'inhale') return 0.4 + ringOffset + progress * 0.6;
+    if (phase === 'hold') return 1.0 + ringOffset;
+    return 1.0 + ringOffset - progress * 0.6;
+  };
+  
+  const phaseLabel = phase === 'inhale' ? '吸气' : phase === 'hold' ? '屏息' : '呼气';
+  const phaseColor = phase === 'inhale' ? mode.colors[0] : phase === 'hold' ? mode.colors[3] : mode.colors[5];
   
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }} 
-      animate={{ opacity: 1, y: 0 }} 
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
-      className="flex flex-col items-center px-6 pt-4"
-    >
+    <div className="flex flex-col items-center px-6 pt-2" style={{ opacity: 1 }}>
       {/* Central Visualizer */}
-      <div className="relative w-64 h-64 flex items-center justify-center mb-8">
+      <div className="relative w-72 h-72 flex items-center justify-center mb-6">
+        {/* Breathing glow orbs behind */}
         {!isOff && (
           <>
             <motion.div
-              animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2] }}
-              transition={{ duration: mode.id === 'resonance' ? 11 : mode.id === '478' ? 19 : 8, repeat: Infinity, ease: "easeInOut" }}
+              animate={{ scale: [0.5, 1.2, 0.5], opacity: [0.15, 0.35, 0.15] }}
+              transition={{ duration: breath.inhale + breath.exhale + (breath.hold || 0), repeat: Infinity, ease: "easeInOut" }}
               className="absolute inset-0 rounded-full blur-3xl"
               style={{ background: mainColor }}
             />
             <motion.div
-              animate={{ scale: [1.1, 0.9, 1.1], opacity: [0.4, 0.15, 0.4] }}
-              transition={{ duration: mode.id === 'resonance' ? 11 : mode.id === '478' ? 19 : 8, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+              animate={{ scale: [0.6, 1.1, 0.6], opacity: [0.2, 0.3, 0.2] }}
+              transition={{ duration: breath.inhale + breath.exhale + (breath.hold || 0), repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
               className="absolute inset-4 rounded-full blur-2xl"
               style={{ background: mode.colors[2] }}
             />
           </>
         )}
         
-        {/* Orbiting ring */}
+        {/* Breathing concentric rings */}
+        {!isOff && rings.map((ring) => (
+          <div
+            key={`ring-${ring}`}
+            className="absolute pointer-events-none"
+            style={{
+              left: '50%',
+              top: '50%',
+              width: `${44 + ring * 28}px`,
+              height: `${44 + ring * 28}px`,
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
+            <motion.div
+              className="rounded-full w-full h-full"
+              style={{
+                borderColor: mode.colors[ring % mode.colors.length],
+                willChange: 'transform, opacity',
+                borderWidth: ring === 0 ? '2px' : `${Math.max(0.3, 1.5 - ring * 0.2)}px`,
+                borderStyle: 'solid',
+              }}
+              animate={{
+                scale: phase === 'inhale' 
+                  ? 0.45 + progress * 0.7 + ring * 0.06
+                  : phase === 'hold' 
+                    ? 1.15 + ring * 0.06 
+                    : 1.15 + ring * 0.06 - progress * 0.7,
+                opacity: phase === 'hold' ? 0.6 - ring * 0.08 : 0.45 - ring * 0.06,
+              }}
+              transition={{ duration: 0.05, ease: "linear" }}
+            />
+          </div>
+        ))}
+
+        {/* Rotating orbit ring */}
         <motion.div
           animate={{ rotate: 360 }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-0 rounded-full"
-          style={{ 
-            border: !isOff ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(255,255,255,0.02)',
-          }}
-        />
-        <motion.div
-          animate={{ rotate: -360 }}
-          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-8 rounded-full"
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-[-4px] rounded-full"
           style={{ 
             border: !isOff ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(255,255,255,0.01)',
           }}
         />
 
-        {/* Ripple rings at varying positions */}
-        {!isOff && [
-          { x: 30, y: 40, dur: 5, delay: 0 },
-          { x: 70, y: 30, dur: 6, delay: 1.5 },
-          { x: 50, y: 65, dur: 4.5, delay: 3 },
-        ].map((r, i) => {
-          const color = mode.colors[i % mode.colors.length];
-          return (
-            <motion.div
-              key={`c-ripple-${i}`}
-              className="absolute rounded-full pointer-events-none"
-              style={{
-                left: `${r.x}%`,
-                top: `${r.y}%`,
-                width: '70vh',
-                height: '70vh',
-                borderColor: color,
-                willChange: 'transform, opacity',
-                transform: 'translate(-50%, -50%) scale(0)',
-              }}
-              animate={{
-                scale: [0, 1],
-                opacity: [0.3, 0],
-                borderWidth: ['1.5px', '0.2px'],
-              }}
-              transition={{
-                duration: r.dur,
-                repeat: Infinity,
-                delay: r.delay,
-                ease: "easeOut",
-              }}
-            />
-          );
-        })}
-
-        {/* Center circle - frosted glass */}
+        {/* Center frosted glass circle with icon */}
         {isOff ? (
-          <div className="relative z-10 w-44 h-44 rounded-full flex items-center justify-center"
+          <div className="relative z-10 w-36 h-36 rounded-full flex items-center justify-center"
             style={{
               background: 'rgba(255,255,255,0.01)',
               border: '1px solid rgba(255,255,255,0.03)',
-              boxShadow: 'inset 0 0 20px rgba(255,255,255,0.01)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
             }}
           >
-            <div className="w-2 h-2 rounded-full bg-white/10" />
+            <div className="w-1.5 h-1.5 rounded-full bg-white/10" />
           </div>
         ) : (
-          <div className="relative z-10 w-44 h-44 rounded-full flex items-center justify-center"
+          <div className="relative z-10 w-36 h-36 rounded-full flex items-center justify-center"
             style={{
-              background: `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), rgba(255,255,255,0.03))`,
-              border: '1px solid rgba(255,255,255,0.1)',
-              boxShadow: `inset 0 0 60px rgba(255,255,255,0.03), 0 0 30px ${mainColor}20`,
+              background: `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), rgba(255,255,255,0.02))`,
+              border: '1px solid rgba(255,255,255,0.08)',
+              boxShadow: `0 0 40px ${mainColor}10`,
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
             }}
           >
-            <mode.icon className="w-14 h-14 text-white/80" strokeWidth={1} />
+            <mode.icon className="w-12 h-12 text-white/80 relative z-10" strokeWidth={1} />
           </div>
         )}
         
+        {/* Phase label */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center mt-16 pointer-events-none">
           <p className="text-white/40 text-xs tracking-[0.3em] uppercase whitespace-nowrap">{isOff ? '已关闭' : mode.name}</p>
         </div>
       </div>
 
       {/* Mode Selector */}
-      <div className="w-full flex gap-2 py-4">
+      <div className="w-full flex gap-2 py-3">
         {MODES.map(m => {
           const isActive = activeMode === m.id;
           return (
@@ -391,34 +427,33 @@ function ControlTab({ activeMode, setActiveMode, timer, setTimer }: any) {
               <div className="text-center">
                 <p 
                   className="font-medium text-xs transition-colors duration-700"
-                  style={{ color: isActive ? '#fff' : 'rgba(255,255,255,0.5)' }}
+                  style={{ color: isActive ? '#fff' : 'rgba(255,255,255,0.6)' }}
                 >{m.name}</p>
-                <p className="text-[9px] mt-1 text-white/20 line-clamp-2 leading-relaxed">{m.desc}</p>
+                <p className="text-[9px] mt-1 text-white/50 line-clamp-2 leading-relaxed">{m.desc}</p>
               </div>
             </button>
           );
         })}
       </div>
 
-      {/* Timer - compact */}
+      {/* Timer - ultra minimal */}
       <div 
-        className="w-full mt-5 p-4 rounded-[22px] transition-all duration-700"
+        className="w-full mt-4 p-3 rounded-[20px] transition-all duration-700"
         style={{
-          background: 'rgba(255,255,255,0.03)',
+          background: 'rgba(255,255,255,0.02)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255,255,255,0.04)',
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.01)',
+          border: '1px solid rgba(255,255,255,0.03)',
         }}
       >
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-[11px] text-white/25 font-medium tracking-widest uppercase">定时关闭</p>
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] text-white/40 font-medium tracking-widest uppercase">定时关闭</p>
           <div className="flex items-baseline gap-1">
-            <p className="text-3xl font-display font-thin text-white/60 tracking-tight">{timer}</p>
-            <p className="text-[11px] text-white/20">分钟</p>
+            <p className="text-2xl font-display font-thin text-white/80 tracking-tight">{timer}</p>
+            <p className="text-[10px] text-white/40">分钟</p>
           </div>
         </div>
-        <div className="relative w-full h-6 flex items-center">
+        <div className="relative w-full h-5 flex items-center mt-1">
           <input 
             type="range" 
             min="1" max="60" 
@@ -427,17 +462,9 @@ function ControlTab({ activeMode, setActiveMode, timer, setTimer }: any) {
             className="w-full relative z-10"
             style={{ accentColor: mainColor }}
           />
-          <div 
-            className="absolute left-0 h-[2px] rounded-full pointer-events-none transition-all duration-75"
-            style={{ 
-              width: `calc(${(timer - 1) / 59 * 100}% + 2px)`,
-              background: `linear-gradient(90deg, ${mainColor}60, ${mainColor})`,
-              boxShadow: `0 0 6px ${mainColor}30`,
-            }}
-          />
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }
 
@@ -453,10 +480,8 @@ function AlarmTab() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }} 
-      animate={{ opacity: 1, y: 0 }} 
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
+      initial={{ opacity: 1 }} 
+      animate={{ opacity: 1 }} 
       className="px-6 pt-2"
     >
       <h2 className="text-3xl font-display font-thin mb-6 text-white/90 tracking-tight">光效闹钟</h2>
@@ -482,7 +507,7 @@ function AlarmTab() {
                   className="text-[11px] font-medium px-2.5 py-1 rounded-full"
                   style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)' }}
                 >{alarm.label}</span>
-                <span className="text-[11px] text-white/20">{alarm.days}</span>
+                <span className="text-[11px] text-white/40">{alarm.days}</span>
               </div>
             </div>
             <button 
@@ -517,7 +542,7 @@ function AlarmTab() {
         <span className="font-medium text-sm tracking-wide">添加闹钟</span>
       </button>
 
-      <p className="text-center mt-8 text-[11px] text-white/20 leading-relaxed px-4">
+      <p className="text-center mt-8 text-[11px] text-white/40 leading-relaxed px-4">
         眼罩会在闹钟时间前 30 分钟逐渐亮起<br/>模拟日出自然唤醒
       </p>
     </motion.div>
@@ -527,10 +552,8 @@ function AlarmTab() {
 function JetLagTab() {
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }} 
-      animate={{ opacity: 1, y: 0 }} 
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
+      initial={{ opacity: 1 }} 
+      animate={{ opacity: 1 }} 
       className="px-6 pt-2 pb-12"
     >
       <h2 className="text-3xl font-display font-thin mb-6 text-white/90 tracking-tight">时差调整</h2>
@@ -546,15 +569,15 @@ function JetLagTab() {
         }}
       >
         <div className="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl translate-x-10 -translate-y-10" style={{ background: 'rgba(59,130,246,0.2)' }} />
-        <Plane className="w-5 h-5 text-white/60 mb-4 relative z-10" />
+        <Plane className="w-5 h-5 text-white/85 mb-4 relative z-10" />
         <h3 className="text-xl mb-1 font-medium relative z-10 text-white/90">前往：巴黎 (CDG)</h3>
-        <p className="text-sm text-white/30 mb-8 relative z-10">相差 7 小时 · 3天后起飞</p>
+        <p className="text-sm text-white/50 mb-8 relative z-10">相差 7 小时 · 3天后起飞</p>
 
         <div className="flex items-center justify-between relative z-10">
           <div>
-            <p className="text-[11px] text-white/20 uppercase tracking-wider mb-1">出发地</p>
+            <p className="text-[11px] text-white/40 uppercase tracking-wider mb-1">出发地</p>
             <p className="text-2xl font-thin text-white/80">北京</p>
-            <p className="text-sm text-white/30 mt-1 font-display tracking-wide">21:00</p>
+            <p className="text-sm text-white/50 mt-1 font-display tracking-wide">21:00</p>
           </div>
           <div className="flex-1 px-6 flex items-center">
              <div className="h-[1px] w-full relative" style={{ background: 'rgba(255,255,255,0.1)' }}>
@@ -562,7 +585,7 @@ function JetLagTab() {
              </div>
           </div>
           <div className="text-right">
-            <p className="text-[11px] text-white/20 uppercase tracking-wider mb-1">目的地</p>
+            <p className="text-[11px] text-white/40 uppercase tracking-wider mb-1">目的地</p>
             <p className="text-2xl font-thin text-white/80">巴黎</p>
             <p className="text-sm mt-1 font-display tracking-wide" style={{ color: 'rgba(147,197,253,0.6)' }}>14:00</p>
           </div>
@@ -585,13 +608,13 @@ function JetLagTab() {
           </div>
           <div>
             <div className="flex items-center justify-between mb-1">
-              <p className="font-medium text-white/70">寻求光照</p>
+              <p className="font-medium text-white/90">寻求光照</p>
               <p 
                 className="text-[10px] font-display px-2 py-0.5 rounded-full"
                 style={{ background: 'rgba(251,191,36,0.1)', color: 'rgba(251,191,36,0.6)' }}
               >08:00 - 12:00</p>
             </div>
-            <p className="text-[11px] text-white/25 mt-2 leading-relaxed">推荐使用眼罩的「正念模式」或前往户外接触自然光，帮助推迟生物钟。</p>
+            <p className="text-[11px] text-white/50 mt-2 leading-relaxed">推荐使用眼罩的「正念模式」或前往户外接触自然光，帮助推迟生物钟。</p>
           </div>
         </div>
         <div 
@@ -608,13 +631,13 @@ function JetLagTab() {
           </div>
           <div>
             <div className="flex items-center justify-between mb-1">
-              <p className="font-medium text-white/70">避免光照</p>
+              <p className="font-medium text-white/90">避免光照</p>
               <p 
                 className="text-[10px] font-display px-2 py-0.5 rounded-full"
                 style={{ background: 'rgba(165,180,252,0.1)', color: 'rgba(165,180,252,0.6)' }}
               >20:00 - 23:00</p>
             </div>
-            <p className="text-[11px] text-white/25 mt-2 leading-relaxed">佩戴眼罩遮光，或使用「4-7-8 呼吸模式」准备入睡。</p>
+            <p className="text-[11px] text-white/50 mt-2 leading-relaxed">佩戴眼罩遮光，或使用「4-7-8 呼吸模式」准备入睡。</p>
           </div>
         </div>
       </div>
@@ -625,10 +648,8 @@ function JetLagTab() {
 function SettingsTab() {
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }} 
-      animate={{ opacity: 1, y: 0 }} 
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
+      initial={{ opacity: 1 }} 
+      animate={{ opacity: 1 }} 
       className="px-6 pt-2 pb-12"
     >
       <h2 className="text-3xl font-display font-thin mb-6 text-white/90 tracking-tight">设备设置</h2>
@@ -644,10 +665,10 @@ function SettingsTab() {
           }}
         >
           <div>
-            <p className="font-medium text-white/70 text-[15px]">眼罩亮度上限</p>
-            <p className="text-[11px] text-white/20 mt-1">控制最大亮度，保护暗适应视力</p>
+            <p className="font-medium text-white/90 text-[15px]">眼罩亮度上限</p>
+            <p className="text-[11px] text-white/40 mt-1">控制最大亮度，保护暗适应视力</p>
           </div>
-          <span className="text-sm text-white/30 font-medium">70%</span>
+          <span className="text-sm text-white/50 font-medium">70%</span>
         </div>
         
         <div 
@@ -660,10 +681,10 @@ function SettingsTab() {
           }}
         >
           <div>
-            <p className="font-medium text-white/70 text-[15px]">呼吸光效平滑度</p>
-            <p className="text-[11px] text-white/20 mt-1">影响光线明暗变化的曲线</p>
+            <p className="font-medium text-white/90 text-[15px]">呼吸光效平滑度</p>
+            <p className="text-[11px] text-white/40 mt-1">影响光线明暗变化的曲线</p>
           </div>
-          <span className="text-sm text-white/30 font-medium">自然 (正弦)</span>
+          <span className="text-sm text-white/50 font-medium">自然 (正弦)</span>
         </div>
 
         <div 
@@ -680,7 +701,7 @@ function SettingsTab() {
       </div>
       
       <div className="mt-auto pt-16 text-center">
-        <p className="text-[11px] text-white/10 font-display tracking-[0.3em]">AURA MASK OS v1.2.4</p>
+        <p className="text-[11px] text-white/50 font-display tracking-[0.3em]">AURA MASK OS v1.2.4</p>
       </div>
     </motion.div>
   )
